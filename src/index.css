@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 330 85% 92%;
+    --foreground: 0 0% 100%;
+
+    --card: 330 90% 85%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 330 85% 88%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 330 95% 58%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 330 90% 75%;
+
+    --secondary: 340 95% 65%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 330 75% 88%;
+    --muted-foreground: 0 0% 100%;
+
+    --accent: 328 90% 75%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 330 80% 78%;
+    --input: 330 85% 95%;
+    --ring: 330 95% 58%;
+
+    --radius: 1.5rem;
+    
+    /* Mood-based color tokens */
+    --mood-calm: 330 70% 85%;
+    --mood-reflective: 340 75% 80%;
+    --mood-joyful: 350 85% 75%;
+    --mood-sad: 320 40% 70%;
+    --mood-angry: 0 75% 65%;
+    --mood-healing: 335 80% 80%;
+    
+    --gradient-hero: linear-gradient(135deg, hsl(330 90% 70%) 0%, hsl(340 95% 75%) 50%, hsl(335 92% 72%) 100%);
+    --gradient-pink: linear-gradient(135deg, hsl(330 90% 75%) 0%, hsl(340 95% 80%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(330 88% 82%) 0%, hsl(330 85% 88%) 100%);
+    --gradient-calm: linear-gradient(135deg, hsl(330 85% 75%), hsl(340 90% 78%));
+    --gradient-reflection: linear-gradient(135deg, hsl(335 80% 75%), hsl(345 85% 78%));
+    --gradient-uplift: linear-gradient(135deg, hsl(340 95% 75%), hsl(350 90% 78%));
+    
+    --shadow-soft: 0 8px 32px -8px hsl(330 85% 65% / 0.25);
+    --shadow-glow: 0 0 60px hsl(330 90% 75% / 0.4);
+    --shadow-float: 0 12px 40px -12px hsl(330 85% 65% / 0.35);
+    --shadow-mood: 0 0 40px hsl(var(--mood-calm) / 0.3);
+
+    --sidebar-background: 330 85% 85%;
+
+    --sidebar-foreground: 0 0% 100%;
+
+    --sidebar-primary: 330 95% 58%;
+
+    --sidebar-primary-foreground: 0 0% 100%;
+
+    --sidebar-accent: 330 90% 75%;
+
+    --sidebar-accent-foreground: 0 0% 100%;
+
+    --sidebar-border: 330 75% 70%;
+
+    --sidebar-ring: 330 95% 58%;
+  }
+
+  .dark {
+    --background: 240 20% 10%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 15% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 15% 12%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 270 60% 65%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 270 80% 75%;
+
+    --secondary: 340 75% 70%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 15% 18%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 200 70% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 10% 20%;
+    --input: 240 10% 20%;
+    --ring: 270 60% 65%;
+    
+    --gradient-hero: linear-gradient(135deg, hsl(270 60% 55%) 0%, hsl(340 75% 60%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(240 15% 12%) 0%, hsl(240 20% 10%) 100%);
+    --gradient-calm: linear-gradient(135deg, hsl(218 53% 45%), hsl(251 53% 49%));
+    --gradient-reflection: linear-gradient(135deg, hsl(280 31% 46%), hsl(270 36% 46%));
+    --gradient-uplift: linear-gradient(135deg, hsl(54 80% 48%), hsl(45 80% 40%));
+    
+    --shadow-soft: 0 4px 20px -4px hsl(270 60% 65% / 0.25);
+    --shadow-glow: 0 0 40px hsl(270 80% 75% / 0.4);
+    --shadow-mood: 0 0 40px hsl(var(--mood-calm) / 0.4);
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold;
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(330 100% 45%) 0%, hsl(340 100% 50%) 50%, hsl(335 100% 48%) 100%);
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
