@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { User } from "@supabase/supabase-js";
-import { ArrowLeft, Calendar, TrendingUp, Heart, Sparkles, Brain, ChevronLeft, ChevronRight, MessageCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowLeft, Calendar, TrendingUp, Heart, Sparkles, Brain, ChevronLeft, ChevronRight, Smile, MessageCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AvatarPersona } from "@/components/chat/AvatarPersona";
 import { analyzeSentiment } from "@/lib/sentiment";
@@ -18,6 +19,12 @@ interface MoodLog {
   note: string | null;
   created_at: string;
   user_id: string;
+}
+
+interface ConversationData {
+  message: string;
+  sentiment: string;
+  timestamp: string;
 }
 
 interface DayData {
@@ -37,11 +44,11 @@ const EMOTIONS = [
 
 const getMoodColor = (mood: string): string => {
   const moodMap: Record<string, string> = {
-    very_happy: "#FFD700",
-    happy: "#FFD700",
-    neutral: "#808080",
-    sad: "#4169E1",
-    very_sad: "#DC143C",
+    very_happy: "#FFD700", // Yellow
+    happy: "#FFD700", // Yellow
+    neutral: "#808080", // Gray
+    sad: "#4169E1", // Blue
+    very_sad: "#DC143C", // Red (angry)
   };
   return moodMap[mood] || "#808080";
 };
@@ -92,6 +99,7 @@ const generateMotivationalMessage = (mood: string, dayNote?: string): string => 
   
   const options = messages[moodKey] || messages.neutral;
   
+  // If there's a day note, try to personalize the message
   if (dayNote && dayNote.length > 10) {
     const sentiment = analyzeSentiment(dayNote);
     if (sentiment === "joyful" && moodKey !== "very_happy") {
@@ -113,6 +121,7 @@ const Mood = () => {
   const [motivationalMessage, setMotivationalMessage] = useState<string>("");
   const [healthPercentage, setHealthPercentage] = useState<number>(0);
   const [healthChange, setHealthChange] = useState<number>(0);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -131,12 +140,9 @@ const Mood = () => {
   useEffect(() => {
     if (user) {
       loadMoodLogs();
+      calculateHealthMetrics();
     }
-  }, [user]);
-
-  useEffect(() => {
-    calculateHealthMetrics();
-  }, [moodLogs]);
+  }, [user, moodLogs]);
 
   const loadMoodLogs = async () => {
     if (!user) return;
@@ -161,6 +167,8 @@ const Mood = () => {
       return;
     }
 
+    // Calculate average mood score (last 30 days)
+    const last30Days = moodLogs.slice(0, 30);
     const moodScores: Record<string, number> = {
       very_happy: 5,
       happy: 4,
@@ -169,11 +177,11 @@ const Mood = () => {
       very_sad: 1,
     };
 
-    const last30Days = moodLogs.slice(0, 30);
     const currentAvg = last30Days.length > 0
       ? last30Days.reduce((sum, log) => sum + (moodScores[log.mood] || 3), 0) / last30Days.length
       : 3;
 
+    // Compare with previous 30 days if available
     const previous30Days = moodLogs.slice(30, 60);
     const previousAvg = previous30Days.length > 0
       ? previous30Days.reduce((sum, log) => sum + (moodScores[log.mood] || 3), 0) / previous30Days.length
@@ -183,7 +191,7 @@ const Mood = () => {
     const change = currentAvg - previousAvg;
 
     setHealthPercentage(Math.round(percentage));
-    setHealthChange(Math.round(change * 20));
+    setHealthChange(Math.round(change * 20)); // Convert to percentage change
   };
 
   const getDaysInMonth = (): DayData[] => {
@@ -195,7 +203,10 @@ const Mood = () => {
     const startingDayOfWeek = firstDay.getDay();
 
     const days: DayData[] = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
+    // Add empty cells for days before the first day of the month
     for (let i = 0; i < startingDayOfWeek; i++) {
       days.push({
         date: new Date(year, month, -startingDayOfWeek + i + 1),
@@ -205,6 +216,7 @@ const Mood = () => {
       });
     }
 
+    // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       date.setHours(0, 0, 0, 0);
@@ -256,6 +268,7 @@ const Mood = () => {
 
     const dateString = selectedDate.toISOString().split('T')[0];
     
+    // Check if mood already exists for this date
     const existingLog = moodLogs.find(log => {
       const logDate = new Date(log.created_at).toISOString().split('T')[0];
       return logDate === dateString;
@@ -263,6 +276,7 @@ const Mood = () => {
 
     try {
       if (existingLog) {
+        // Update existing mood
         const { error } = await supabase
           .from("mood_logs")
           .update({
@@ -278,6 +292,7 @@ const Mood = () => {
           description: "Your emotion has been saved.",
         });
       } else {
+        // Insert new mood
         const { error } = await supabase
           .from("mood_logs")
           .insert({
@@ -371,7 +386,7 @@ const Mood = () => {
           variant="ghost"
           size="sm"
           onClick={() => navigate("/chat")}
-          className="mb-4 text-white hover:bg-white/20 border-2 border-white/30 bg-white/10 backdrop-blur-sm"
+          className="mb-4 text-white hover:bg-white/20"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Chat
@@ -387,12 +402,9 @@ const Mood = () => {
           <Card className="relative overflow-hidden border-2 border-white/40 bg-white/90 backdrop-blur-sm shadow-xl">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
             <CardHeader className="relative z-10">
-              <div className="flex items-center justify-between ">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <AvatarPersona 
-                    name="You" 
-                    state={currentMood === "joyful" ? "encouraging" : currentMood === "sad" || currentMood === "angry" ? "empathetic" : "calm"} 
-                  />
+                  <AvatarPersona name="You" state={currentMood === "joyful" ? "encouraging" : currentMood === "sad" || currentMood === "angry" ? "empathetic" : "calm"} />
                   <div>
                     <CardTitle className="text-3xl font-bold gradient-text">
                       Your Mood Journey
@@ -404,17 +416,17 @@ const Mood = () => {
                 </div>
                 
                 {/* Mental Health Percentage */}
-                                 <div className="text-center">
-                   <div className={`text-4xl font-bold ${healthChange >= 0 ? "text-green-600" : "text-red-600"}`}>
-                     {healthPercentage}%
-                   </div>
-                   <div className="text-sm text-primary font-medium">Mental Health</div>
-                   {healthChange !== 0 && (
-                     <div className={`text-xs mt-1 font-semibold ${healthChange >= 0 ? "text-green-600" : "text-red-600"}`}>
-                       {healthChange >= 0 ? "↑" : "↓"} {Math.abs(healthChange)}%
-                     </div>
-                   )}
-                 </div>
+                <div className="text-center">
+                  <div className={`text-4xl font-bold ${healthChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                    {healthPercentage}%
+                  </div>
+                  <div className="text-sm text-muted-foreground">Mental Health</div>
+                  {healthChange !== 0 && (
+                    <div className={`text-xs mt-1 ${healthChange >= 0 ? "text-green-600" : "text-red-600"}`}>
+                      {healthChange >= 0 ? "↑" : "↓"} {Math.abs(healthChange)}%
+                    </div>
+                  )}
+                </div>
               </div>
             </CardHeader>
           </Card>
@@ -436,6 +448,7 @@ const Mood = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-center justify-center gap-8 flex-wrap">
+                {/* Circular Progress Indicators */}
                 {Object.entries(distribution).map(([mood, percentage]) => (
                   <div key={mood} className="flex flex-col items-center gap-2">
                     <div className="relative w-24 h-24">
@@ -465,10 +478,10 @@ const Mood = () => {
                         <span className="text-2xl">{getMoodEmoji(mood)}</span>
                       </div>
                     </div>
-                                         <div className="text-center">
-                       <div className="text-sm font-bold capitalize text-primary">{mood.replace('_', ' ')}</div>
-                       <div className="text-xs font-semibold text-[#FF69B4]">{Math.round(percentage)}%</div>
-                     </div>
+                    <div className="text-center">
+                      <div className="text-sm font-semibold capitalize">{mood.replace('_', ' ')}</div>
+                      <div className="text-xs text-muted-foreground">{Math.round(percentage)}%</div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -494,33 +507,31 @@ const Mood = () => {
                   <CardDescription>Click on any day to log or update your emotion</CardDescription>
                 </div>
                 <div className="flex gap-2">
-                                     <Button
-                     variant="outline"
-                     size="icon"
-                     onClick={() => navigateMonth("prev")}
-                     className="border-2 border-[#FF69B4] bg-[#FF69B4] text-white hover:bg-[#FF69B4]/90 hover:text-white shadow-md"
-                   >
-                     <ChevronLeft className="h-4 w-4" />
-                   </Button>
-                   <Button
-                     variant="outline"
-                     size="icon"
-                     onClick={() => navigateMonth("next")}
-                     className="border-2 border-[#FF69B4] bg-[#FF69B4] text-white hover:bg-[#FF69B4]/90 hover:text-white shadow-md"
-                   >
-                     <ChevronRight className="h-4 w-4" />
-                   </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigateMonth("prev")}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => navigateMonth("next")}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               {/* Week day headers */}
               <div className="grid grid-cols-7 gap-2 mb-2">
-                               {weekDays.map(day => (
-                   <div key={day} className="text-center font-bold text-sm text-[#FF69B4] py-2 bg-white/50 rounded">
-                     {day}
-                   </div>
-                 ))}
+                {weekDays.map(day => (
+                  <div key={day} className="text-center font-semibold text-sm text-primary py-2">
+                    {day}
+                  </div>
+                ))}
               </div>
 
               {/* Calendar grid */}
@@ -604,48 +615,49 @@ const Mood = () => {
             <div className="space-y-4">
               {/* Emotion Buttons */}
               <div>
-                                 <label className="text-sm font-bold mb-2 block text-[#FF69B4]">Select Your Emotion</label>
+                <label className="text-sm font-medium mb-2 block">Select Your Emotion</label>
                 <div className="grid grid-cols-5 gap-2">
                   {EMOTIONS.map(emotion => (
-                                         <motion.button
-                       key={emotion.mood}
-                       whileHover={{ scale: 1.05 }}
-                       whileTap={{ scale: 0.95 }}
-                       onClick={() => handleEmotionSelect(emotion.mood)}
-                       className={`
-                         flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all
-                         ${selectedEmotion === emotion.mood
-                           ? "border-[#FF69B4] bg-[#FF69B4] text-white scale-105 shadow-lg"
-                           : "border-[#FF69B4] bg-white text-[#FF69B4] hover:bg-[#FF69B4]/20 hover:text-[#FF69B4]"
-                         }
-                       `}
-                     >
-                       <span className="text-2xl">{emotion.emoji}</span>
-                       <span className={`text-xs font-bold ${selectedEmotion === emotion.mood ? "text-white" : "text-[#FF69B4]"}`}>
-                         {emotion.label}
-                       </span>
-                     </motion.button>
+                    <motion.button
+                      key={emotion.mood}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleEmotionSelect(emotion.mood)}
+                      className={`
+                        flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all
+                        ${selectedEmotion === emotion.mood
+                          ? "border-primary bg-primary/10 scale-105"
+                          : "border-gray-200 hover:border-primary/50"
+                        }
+                      `}
+                      style={{
+                        backgroundColor: selectedEmotion === emotion.mood ? emotion.bgColor : "transparent",
+                      }}
+                    >
+                      <span className="text-2xl">{emotion.emoji}</span>
+                      <span className="text-xs font-medium">{emotion.label}</span>
+                    </motion.button>
                   ))}
                 </div>
               </div>
 
               {/* Day Note Input */}
               <div>
-                                 <label className="text-sm font-bold mb-2 block flex items-center gap-2 text-[#FF69B4]">
-                   <MessageCircle className="h-4 w-4 text-[#FF69B4]" />
-                   Can you tell us about your day in words?
-                 </label>
-                                 <Textarea
-                   value={dayNote}
-                   onChange={(e) => {
-                     setDayNote(e.target.value);
-                     if (selectedEmotion) {
-                       setMotivationalMessage(generateMotivationalMessage(selectedEmotion, e.target.value));
-                     }
-                   }}
-                   placeholder="Share what made you feel this way today..."
-                   className="min-h-[100px] bg-white text-gray-900 border-2 border-gray-300 focus:border-[#FF69B4] focus:ring-2 focus:ring-[#FF69B4]/20 placeholder:text-gray-400"
-                 />
+                <label className="text-sm font-medium mb-2 block flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  Can you tell us about your day in words?
+                </label>
+                <Textarea
+                  value={dayNote}
+                  onChange={(e) => {
+                    setDayNote(e.target.value);
+                    if (selectedEmotion) {
+                      setMotivationalMessage(generateMotivationalMessage(selectedEmotion, e.target.value));
+                    }
+                  }}
+                  placeholder="Share what made you feel this way today..."
+                  className="min-h-[100px]"
+                />
               </div>
 
               {/* Motivational Message */}
@@ -665,25 +677,25 @@ const Mood = () => {
               )}
 
               <div className="flex gap-2 pt-2">
-                                 <Button
-                   variant="outline"
-                   onClick={() => {
-                     setIsDialogOpen(false);
-                     setDayNote("");
-                     setSelectedEmotion(null);
-                   }}
-                   className="flex-1 border-2 border-gray-300 bg-white text-gray-700 hover:bg-gray-100 font-semibold"
-                 >
-                   Cancel
-                 </Button>
-                 <Button
-                   onClick={handleSaveMood}
-                   disabled={!selectedEmotion}
-                   className="flex-1 bg-[#FF69B4] text-white hover:bg-[#FF69B4]/90 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed font-bold"
-                 >
-                   <Heart className="h-4 w-4 mr-2" />
-                   Save Emotion
-                 </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsDialogOpen(false);
+                    setDayNote("");
+                    setSelectedEmotion(null);
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSaveMood}
+                  disabled={!selectedEmotion}
+                  className="flex-1 bg-gradient-to-r from-primary to-secondary"
+                >
+                  <Heart className="h-4 w-4 mr-2" />
+                  Save Emotion
+                </Button>
               </div>
             </div>
           </DialogContent>

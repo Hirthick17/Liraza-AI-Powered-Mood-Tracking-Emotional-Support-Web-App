@@ -4,6 +4,51 @@
 
 **URL**: https://lovable.dev/projects/bac3a623-1308-4567-80e5-a9f02e92fb53
 
+## Quick Start
+
+### Local Development (Without Docker)
+```sh
+# Step 1: Clone the repository
+git clone <YOUR_GIT_URL>
+
+# Step 2: Navigate to the project directory
+cd <YOUR_PROJECT_NAME>
+
+# Step 3: Install dependencies
+npm i
+
+# Step 4: Create .env file with your Supabase credentials
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_anon_key
+
+# Step 5: Start development server
+npm run dev
+```
+
+### Docker Development
+```sh
+# Build and start development container
+docker-compose -f docker-compose.dev.yml up
+
+# Access at http://localhost:5173
+```
+
+### Docker Production
+```sh
+# Build production image
+docker build -t liraza-frontend .
+
+# Run production container
+docker run -d -p 3000:80 liraza-frontend
+
+# Or use docker-compose
+docker-compose up -d
+```
+
+**For detailed Docker setup, see [DOCKER_SETUP.md](./DOCKER_SETUP.md)**
+
+**For system architecture details, see [ARCHITECTURE.md](./ARCHITECTURE.md)**
+
 ## How can I edit this code?
 
 There are several ways of editing your application.
@@ -59,10 +104,14 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
+- Supabase (Backend as a Service)
+- Docker (Containerization)
 
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/bac3a623-1308-4567-80e5-a9f02e92fb53) and click on Share -> Publish.
+
+Or use Docker for production deployment - see [DOCKER_SETUP.md](./DOCKER_SETUP.md) for details.
 
 ## Can I connect a custom domain to my Lovable project?
 
