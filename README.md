@@ -2,7 +2,6 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/bac3a623-1308-4567-80e5-a9f02e92fb53
 
 ## Quick Start
 
@@ -53,11 +52,7 @@ docker-compose up -d
 
 There are several ways of editing your application.
 
-**Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/bac3a623-1308-4567-80e5-a9f02e92fb53) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
@@ -107,16 +102,6 @@ This project is built with:
 - Supabase (Backend as a Service)
 - Docker (Containerization)
 
-## How can I deploy this project?
+ use Docker for production deployment - see [DOCKER_SETUP.md](./DOCKER_SETUP.md) for details.
 
-Simply open [Lovable](https://lovable.dev/projects/bac3a623-1308-4567-80e5-a9f02e92fb53) and click on Share -> Publish.
 
-Or use Docker for production deployment - see [DOCKER_SETUP.md](./DOCKER_SETUP.md) for details.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
