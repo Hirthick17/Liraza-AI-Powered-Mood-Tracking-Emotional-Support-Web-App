@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Welcome to Liraza-AI-Powered-Mood-Tracking-Web-App
 
 ## Project info
 
